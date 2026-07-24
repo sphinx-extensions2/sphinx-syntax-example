@@ -18,7 +18,7 @@ The pre-commit hooks are managed by [pre-commit](https://pre-commit.com/).
 To run the hooks on all files, install pre-commit and run:
 
 ```bash
-pre-commit run --all
+pre-commit run --all-files
 ```
 
 Or to install the hooks so they run automatically on every commit, run:

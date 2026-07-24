@@ -1,6 +1,8 @@
 # sphinx-syntax-example
 
 [![PyPI][pypi-badge]][pypi-link]
+[![Docs][rtd-badge]][rtd-link]
+[![CI][ci-badge]][ci-link]
 
 > A Sphinx extension adding the `syntax-example` directive,
 > which shows a block of markup as **both** its raw source and its rendered result.
@@ -12,6 +14,8 @@ It is useful for documentation that teaches a markup syntax,
 where readers need to see the input alongside the output.
 
 ## Installation
+
+Requires Python 3.11+ and Sphinx 7.2+.
 
 ```bash
 pip install sphinx-syntax-example
@@ -116,7 +120,11 @@ directive.
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md).
+See [CONTRIBUTING.md](https://github.com/sphinx-extensions2/sphinx-syntax-example/blob/main/CONTRIBUTING.md).
 
 [pypi-badge]: https://img.shields.io/pypi/v/sphinx-syntax-example.svg
 [pypi-link]: https://pypi.org/project/sphinx-syntax-example
+[rtd-badge]: https://readthedocs.org/projects/sphinx-syntax-example/badge/?version=latest
+[rtd-link]: https://sphinx-syntax-example.readthedocs.io
+[ci-badge]: https://github.com/sphinx-extensions2/sphinx-syntax-example/actions/workflows/tests.yml/badge.svg
+[ci-link]: https://github.com/sphinx-extensions2/sphinx-syntax-example/actions/workflows/tests.yml

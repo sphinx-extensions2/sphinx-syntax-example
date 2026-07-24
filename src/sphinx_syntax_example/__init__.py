@@ -1,4 +1,4 @@
-"""A ``syntax-example`` directive that shows markup as source and rendered result.
+"""A syntax-example directive that shows markup as source and rendered result.
 
 The directive renders its content **twice**: once as a syntax-highlighted view
 of the raw source, and once as the rendered result of parsing that source.
