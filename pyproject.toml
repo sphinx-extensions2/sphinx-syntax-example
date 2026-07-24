@@ -18,7 +18,7 @@ classifiers = [
 ]
 keywords = ["sphinx", "extension", "example", "directive", "documentation"]
 requires-python = ">=3.11"
-dependencies = ["sphinx>=7.2"]
+dependencies = ["sphinx>=9.0.4"]
 
 [project.urls]
 Homepage = "https://github.com/sphinx-extensions2/sphinx-syntax-example"
