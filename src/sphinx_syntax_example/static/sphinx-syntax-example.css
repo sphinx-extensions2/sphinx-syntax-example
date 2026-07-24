@@ -1,0 +1,81 @@
+/* sphinx_syntax_example: the `.. syntax-example::` directive shows a block of
+   markup as its raw source and its rendered result, stacked inside one framed
+   box.
+
+   THEME-AGNOSTIC COLOURS — every colour is a package-owned custom property that
+   resolves to the active theme's variable when present, else a sensible light
+   default. On Furo (light and dark) the `--color-*` variables are defined by the
+   theme, so the box tracks the theme automatically; on a theme that does not
+   define them, the light defaults apply. The `prefers-color-scheme: dark` block
+   only changes the *fallback* defaults, so it affects non-Furo dark themes but
+   is a harmless no-op wherever the theme variables already win.
+
+   CASCADE NOTE — the child-combinator selectors below are DELIBERATE, not
+   stylistic; do not "simplify" them to a single class. docutils tags the render
+   pane and the outer box with the `container` class, and Sphinx tags the source
+   pane `highlight-<lang>`, so some themes' own rules match our elements and
+   (being more specific than a lone class) would otherwise win. The known
+   offenders, from Furo's bundled `furo-extensions.css` / theme CSS, are:
+
+   - `[role=main] .container` (specificity 0,2,0) zeroes `padding-left/right` —
+     this is what blanks the render pane's horizontal padding.
+     `.syntax-example > .syntax-example-render` (0,2,0) ties it, and Sphinx loads
+     extension `html_css_files` AFTER the theme CSS, so the tie resolves to us.
+   - `div[class*=" highlight-"]` (0,1,1) sets `margin: 1em 0` on the source pane;
+     `.syntax-example > .syntax-example-source` (0,2,0) beats it outright.
+
+   The outer `.syntax-example` (0,1,0) is intentionally left low: it sets no
+   horizontal padding, so a theme zeroing that padding (and setting
+   `max-width: none`) is a harmless no-op on the frame. The rubric is a `<p>`,
+   not a `.container`, so only docutils' `p.rubric` (0,1,1) competes and
+   `.syntax-example > .rubric` (0,2,0) wins. */
+
+.syntax-example {
+    /* Package-owned properties: theme variable first, light default second. */
+    --syntax-example-border: var(--color-background-border, #dddddd);
+    --syntax-example-label-fg: var(--color-foreground-muted, #5f6368);
+    --syntax-example-label-bg: var(--color-background-secondary, #f5f6f8);
+
+    margin: 1rem 0;
+    border: 1px solid var(--syntax-example-border);
+    border-radius: .3rem;
+    overflow: hidden;
+}
+
+@media (prefers-color-scheme: dark) {
+    /* Only the fallback defaults change; a theme that defines the `--color-*`
+       variables still wins, so this affects non-Furo dark themes only. */
+    .syntax-example {
+        --syntax-example-border: var(--color-background-border, #45474a);
+        --syntax-example-label-fg: var(--color-foreground-muted, #b8bcc2);
+        --syntax-example-label-bg: var(--color-background-secondary, #2b2d30);
+    }
+}
+
+.syntax-example > .rubric {
+    margin: 0;
+    padding: .35rem .8rem;
+    font-size: .8rem;
+    font-weight: 600;
+    letter-spacing: .02em;
+    color: var(--syntax-example-label-fg);
+    background-color: var(--syntax-example-label-bg);
+    border-bottom: 1px solid var(--syntax-example-border);
+}
+
+.syntax-example > .syntax-example-source {
+    margin: 0;
+    border-bottom: 1px solid var(--syntax-example-border);
+}
+
+.syntax-example > .syntax-example-render {
+    padding: .3rem .8rem;
+}
+
+.syntax-example > .syntax-example-render > :first-child {
+    margin-top: 0;
+}
+
+.syntax-example > .syntax-example-render > :last-child {
+    margin-bottom: 0;
+}

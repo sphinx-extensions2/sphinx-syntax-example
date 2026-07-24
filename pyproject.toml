@@ -1,0 +1,51 @@
+[build-system]
+requires = ["flit_core>=3.11,<4"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "sphinx_syntax_example"
+dynamic = ["version", "description"]
+authors = [{name = "Chris Sewell", email = "chrisj_sewell@hotmail.com"}]
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Framework :: Sphinx :: Extension",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Typing :: Typed",
+]
+keywords = ["sphinx", "extension", "example", "directive", "documentation"]
+requires-python = ">=3.11"
+dependencies = ["sphinx>=7.2"]
+
+[project.urls]
+Homepage = "https://github.com/sphinx-extensions2/sphinx-syntax-example"
+Documentation = "https://sphinx-syntax-example.readthedocs.io/"
+
+[project.optional-dependencies]
+testing = ["pytest", "pytest-cov", "coverage[toml]", "myst-parser"]
+docs = ["furo"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+extend-select = ["B0", "C4", "I", "ICN", "ISC", "N", "RUF", "SIM", "UP"]
+extend-ignore = ["ISC001", "RUF009"]
+
+[tool.ruff.lint.isort]
+force-sort-within-sections = true
+
+[tool.mypy]
+strict = true
+show_error_codes = true
+
+[[tool.mypy.overrides]]
+# Pygments ships no py.typed marker; only get_lexer_by_name / ClassNotFound are used.
+module = ["pygments.*"]
+ignore_missing_imports = true
+
+[tool.coverage.run]
+source = ["src"]
