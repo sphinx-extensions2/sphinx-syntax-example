@@ -297,13 +297,14 @@ def test_non_html_builder_skips_css(tmp_path: Path) -> None:
     result = run_sphinxbuild(tmp_path, buildername="text")
     assert not result.stderr
     assert (result.build / "text" / "index.txt").is_file()
+    # no _static/ tree (and hence no stylesheet) is emitted for a text build
+    assert not (result.build / "text" / "_static").exists()
 
 
 def test_markdown_source_detection(tmp_path: Path) -> None:
     """In a MyST Markdown document the source pane uses a Markdown-family
     lexer, inferred from the ``.md`` source suffix."""
-    myst = pytest.importorskip("myst_parser")
-    assert myst  # imported for its side effect of being installable
+    pytest.importorskip("myst_parser")
     (tmp_path / "conf.py").write_text(CONF_CONTENT + "\nextensions.append('myst_parser')\n")
     (tmp_path / "index.md").write_text(
         dedent(
@@ -322,6 +323,53 @@ def test_markdown_source_detection(tmp_path: Path) -> None:
     assert source["language"] in {"myst", "markdown"}
     # the render pane still parses the content as MyST (bold -> strong)
     assert list(_render_pane(_wrapper(result.doctree())).findall(nodes.strong))
+
+
+def test_empty_content_is_an_error(tmp_path: Path) -> None:
+    """A bodyless directive is reported as an error instead of silently
+    rendering an empty frame."""
+    (tmp_path / "conf.py").write_text(CONF_CONTENT)
+    (tmp_path / "index.rst").write_text(
+        dedent(
+            """\
+            Test
+            ====
+
+            .. syntax-example::
+
+            A following paragraph.
+            """
+        )
+    )
+    result = run_sphinxbuild(tmp_path)
+    assert "Content block expected" in result.stderr
+    assert not [
+        c for c in result.doctree().findall(nodes.container) if "syntax-example" in c["classes"]
+    ]
+
+
+def test_malformed_title_markup_is_reported(tmp_path: Path) -> None:
+    """Broken inline markup in the title is reported as a build warning (so a
+    strict ``-W`` build catches it) and marked ``problematic`` in the rubric —
+    the docutils reporter logs it at parse time, independent of the returned
+    system-message nodes."""
+    (tmp_path / "conf.py").write_text(CONF_CONTENT)
+    (tmp_path / "index.rst").write_text(
+        dedent(
+            """\
+            Test
+            ====
+
+            .. syntax-example:: A *unclosed emphasis title
+
+               content
+            """
+        )
+    )
+    result = run_sphinxbuild(tmp_path)
+    assert "Inline emphasis start-string" in result.stderr
+    rubric = next(_wrapper(result.doctree()).findall(nodes.rubric))
+    assert list(rubric.findall(nodes.problematic))
 
 
 # --- language inference (unit level) --------------------------------------
@@ -438,9 +486,9 @@ def test_subclass_empty_title_suppresses_rubric(tmp_path: Path) -> None:
     assert not result.stderr
     wrapper = _wrapper(result.doctree())
     assert not list(wrapper.findall(nodes.rubric))
-    # the source and render panes are still present
+    # the source and render panes are still present and populated
     assert _source_block(wrapper).astext() == "content"
-    assert _render_pane(wrapper) is not None
+    assert _render_pane(wrapper).astext() == "content"
 
 
 def test_subclass_numbering_seam(tmp_path: Path) -> None:
