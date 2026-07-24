@@ -17,3 +17,6 @@ updates:
       prefix: ⬆️
     schedule:
       interval: weekly
+    # this is a library: widen version ranges instead of raising floors,
+    # so releases already satisfied by the range don't generate PRs
+    versioning-strategy: widen
