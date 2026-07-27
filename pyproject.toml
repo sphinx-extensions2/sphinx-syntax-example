@@ -14,6 +14,10 @@ classifiers = [
     "Framework :: Sphinx :: Extension",
     "Intended Audience :: Developers",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Typing :: Typed",
 ]
 keywords = ["sphinx", "extension", "example", "directive", "documentation"]
@@ -27,6 +31,12 @@ Documentation = "https://sphinx-syntax-example.readthedocs.io/"
 [project.optional-dependencies]
 testing = ["pytest", "pytest-cov", "coverage[toml]", "myst-parser"]
 docs = ["furo"]
+
+[tool.flit.sdist]
+# Ship the test suite, docs sources, and dev entry points in the sdist,
+# for downstream/distro packagers; flit's default is the module only.
+include = ["tests/", "docs/", "CHANGELOG.md", "CONTRIBUTING.md", "tox.ini"]
+exclude = ["docs/_build", "**/__pycache__"]
 
 [tool.ruff]
 line-length = 100
