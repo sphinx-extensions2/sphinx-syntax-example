@@ -245,8 +245,12 @@ class SyntaxExampleDirective(SphinxDirective):
     def run(self) -> list[nodes.Node]:
         """Build the example subtree from the override seams.
 
+        A bodyless directive is reported as an error (there is nothing to
+        show in either pane) rather than rendering an empty frame.
+
         :returns: A single container node.
         """
+        self.assert_has_content()
         wrapper = nodes.container(classes=list(self.wrapper_classes))
         self.set_source_info(wrapper)
 
