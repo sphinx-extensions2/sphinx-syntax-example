@@ -131,6 +131,8 @@ differs from rendered output" directive: override `source_text` to return the
 shown text, and `render_into` to render the alternative output.
 
 ```python
+from docutils.parsers.rst import directives
+
 from sphinx_syntax_example import SyntaxExampleDirective
 
 
@@ -142,10 +144,22 @@ class NumberedExample(SyntaxExampleDirective):
 
 
 class AltOutputExample(SyntaxExampleDirective):
-    """Shows verbatim source, renders something else."""
+    """Shows verbatim source, renders something else.
+
+    Takes the alternative markup from an ``:alt-output:`` option.
+    """
+
+    option_spec = {
+        **SyntaxExampleDirective.option_spec,
+        "alt-output": directives.unchanged,
+    }
 
     def render_into(self, container):
-        self.nested_parse_text(self.alternative_markup(), container)
+        alternative = self.options.get("alt-output")
+        if alternative is None:
+            super().render_into(container)
+        else:
+            self.nested_parse_text(alternative, container)
 
 
 def setup(app):
@@ -161,6 +175,11 @@ extension's container visitor writes `<div class="myst-example docutils">`
 `.container` layout rules off the frame:
 
 ```python
+from docutils import nodes
+
+from sphinx_syntax_example import SyntaxExampleDirective
+
+
 class DivExample(SyntaxExampleDirective):
     wrapper_classes = ("myst-example",)
     render_classes = ("myst-example-render",)

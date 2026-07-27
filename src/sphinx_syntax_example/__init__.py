@@ -37,8 +37,13 @@ An unknown ``:highlight:`` value falls back to the inferred language (with a
 verbose-level note) rather than failing a strict ``-W`` build.
 
 The directive is theme-agnostic: it makes no assumption about the active Sphinx
-theme, imports nothing beyond docutils / Sphinx / Pygments, and relies only on
-the stable public ``get_filetype`` / ``config.source_suffix`` API. The package
+theme, and imports nothing beyond docutils / Sphinx / Pygments. Its Sphinx
+surface is the stable public ``get_filetype`` / ``config.source_suffix`` API,
+plus one deliberate exception: the lexer registries in
+:mod:`sphinx.highlighting`, which have no public accessor. Those two are read
+by name and checked for mapping-ness (see :data:`_SPHINX_LEXER_REGISTRIES`), so
+a rename or reshape costs the ``app.add_lexer`` awareness and nothing more —
+the probe degrades to Pygments alone rather than raising. The package
 ships one small stylesheet (registered on an HTML build via
 :func:`_add_static_assets`) whose colours degrade gracefully across themes.
 
@@ -323,15 +328,16 @@ class SyntaxExampleDirective(SphinxDirective):
         incremental build reproduces exactly the numbers of a full build, and
         no state crosses between the worker processes of a parallel read.
 
-        :param key: The counter's key in ``temp_data``. Defaults to one
+        :param key: The counter's key in ``temp_data``. Pass one to share a
+            counter across several directives; any string is taken at face
+            value, including ``""``. ``None`` (the default) means the key
             namespaced by the name the directive was registered under —
-            case-folded, since reStructuredText directive names are
+            lowercased, since reStructuredText directive names are
             case-insensitive and two spellings of one directive must share a
-            run — so sibling directives count independently; pass an explicit
-            key to share one counter across several directives.
+            run — so sibling directives count independently.
         :returns: The next number in the current document, counting from 1.
         """
-        counter_key = key or f"syntax-example-count:{self.name.lower()}"
+        counter_key = key if key is not None else f"syntax-example-count:{self.name.lower()}"
         # ``temp_data`` is a namespace shared with every other extension, so a
         # value of another type under this key restarts rather than raising.
         previous = self.env.temp_data.get(counter_key, 0)

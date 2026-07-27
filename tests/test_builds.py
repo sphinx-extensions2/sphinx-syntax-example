@@ -668,7 +668,7 @@ def test_node_factory_classes_are_merged_not_replaced(tmp_path: Path) -> None:
     assert _wrapper(result.doctree())["classes"] == ["extra", "syntax-example"]
 
 
-# --- app-registered lexers ------------------------------------------------
+# --- lexer resolution -----------------------------------------------------
 
 _LEXER_CONF = CONF_CONTENT + dedent(
     '''
@@ -721,6 +721,37 @@ def test_app_registered_lexer_is_honoured(tmp_path: Path) -> None:
     assert _source_block(_wrapper(result.doctree()))["language"] == "project-markup"
 
 
+def test_pygments_only_lexer_is_honoured(tmp_path: Path) -> None:
+    """A lexer only Pygments provides is honoured — the fallback arm of the
+    probe, after the Sphinx registries have been consulted and missed.
+
+    The precondition is asserted rather than assumed: were ``ruby`` ever to gain
+    a Sphinx registration, this test would keep passing while silently no longer
+    reaching the Pygments lookup at all, which is precisely how that arm went
+    uncovered before.
+    """
+    assert "ruby" not in highlighting.lexer_classes
+    assert "ruby" not in highlighting.lexers
+
+    (tmp_path / "conf.py").write_text(CONF_CONTENT)
+    (tmp_path / "index.rst").write_text(
+        dedent(
+            """\
+            Test
+            ====
+
+            .. syntax-example::
+               :highlight: ruby
+
+               puts "hello"
+            """
+        )
+    )
+    result = run_sphinxbuild(tmp_path, warningiserror=True)
+    assert not result.stderr
+    assert _source_block(_wrapper(result.doctree()))["language"] == "ruby"
+
+
 def test_sphinx_builtin_lexer_alias_is_honoured(tmp_path: Path) -> None:
     """Sphinx's own built-in aliases count as registered too, so ``none`` — a
     valid highlight language Pygments does not resolve — is honoured."""
@@ -745,7 +776,14 @@ def test_sphinx_builtin_lexer_alias_is_honoured(tmp_path: Path) -> None:
 
 def test_app_registered_lexer_does_not_leak(tmp_path: Path) -> None:
     """The registry probe is read-only, and the previous test's registration is
-    undone, so the name is unknown again outside that project."""
+    undone, so the name is unknown again outside that project.
+
+    This is a canary for the ``_isolate_lexer_registries`` fixture, and is
+    deliberately order-dependent: it is meaningful only when it runs after
+    ``test_app_registered_lexer_is_honoured`` has registered the name, which
+    file order gives us. Should it ever be run alone it passes vacuously —
+    it is a guard against leakage, not a test of the probe.
+    """
     from sphinx_syntax_example import _lexer_available
 
     assert not _lexer_available("project-markup")
@@ -850,6 +888,8 @@ def test_per_document_number_key_is_case_insensitive(tmp_path: Path) -> None:
 
 _ALT_MARKUP_CONF = CONF_CONTENT + dedent(
     r'''
+        from docutils.parsers.rst import directives
+
         from sphinx_syntax_example import SyntaxExampleDirective
 
         ALT_MARKUP = "Alternative **output**.\n\n- one\n- two"
@@ -879,10 +919,28 @@ _ALT_MARKUP_CONF = CONF_CONTENT + dedent(
                 self.nested_parse_text("A {no-such-role}`x` reference.", container)
 
 
+        class AltOutputExample(SyntaxExampleDirective):
+            """The ``:alt-output:`` recipe documented in the README, verbatim:
+            an added option whose markup replaces the rendered output."""
+
+            option_spec = {
+                **SyntaxExampleDirective.option_spec,
+                "alt-output": directives.unchanged,
+            }
+
+            def render_into(self, container):
+                alternative = self.options.get("alt-output")
+                if alternative is None:
+                    super().render_into(container)
+                else:
+                    self.nested_parse_text(alternative, container)
+
+
         def setup(app):
             app.add_directive("alt-markup-example", AltMarkupExample)
             app.add_directive("broken-markup-example", BrokenMarkupExample)
             app.add_directive("broken-myst-markup-example", BrokenMystMarkupExample)
+            app.add_directive("alt-output-example", AltOutputExample)
         '''
 )
 
@@ -939,6 +997,41 @@ def test_nested_parse_text_in_myst(tmp_path: Path) -> None:
     result = run_sphinxbuild(tmp_path, warningiserror=True)
     assert not result.stderr
     _assert_alt_markup_rendered(result)
+
+
+def test_alt_output_option_recipe(tmp_path: Path) -> None:
+    """The README's ``:alt-output:`` recipe works as printed: an extended
+    ``option_spec``, the option's markup rendered in place of the content, and
+    ``super().render_into`` still reached when the option is absent."""
+    (tmp_path / "conf.py").write_text(_ALT_MARKUP_CONF)
+    (tmp_path / "index.rst").write_text(
+        dedent(
+            """\
+            Test
+            ====
+
+            .. alt-output-example::
+               :alt-output: Rendered **instead**.
+
+               shown source
+
+            .. alt-output-example::
+
+               no option, so the content is rendered
+            """
+        )
+    )
+    result = run_sphinxbuild(tmp_path, warningiserror=True)
+    assert not result.stderr
+    panes = [
+        (_source_block(w).astext(), _render_pane(w).astext())
+        for w in result.doctree().findall(nodes.container)
+        if "syntax-example" in w["classes"]
+    ]
+    assert panes == [
+        ("shown source", "Rendered instead."),
+        ("no option, so the content is rendered", "no option, so the content is rendered"),
+    ]
 
 
 def test_nested_parse_text_attributes_warnings(tmp_path: Path) -> None:

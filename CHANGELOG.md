@@ -10,7 +10,7 @@
   option` — reproducing the shape of sphinx-needs' bespoke `need-example`
   directive so its documentation can move to the canonical directive. The
   counter restarts per document and is keyed by the registered directive name
-  (case-folded), so aliases number independently; an empty `default_title` is
+  (lowercased), so aliases number independently; an empty `default_title` is
   left alone. A matching option is being added to ubCode's Rust engine under
   the same config name, to produce the same output.
 - New `build_wrapper_node` and `build_render_node` seams, deciding the node
