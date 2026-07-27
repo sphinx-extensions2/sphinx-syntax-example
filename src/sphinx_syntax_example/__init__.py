@@ -75,7 +75,7 @@ from sphinx.errors import FiletypeNotFoundError
 from sphinx.util import get_filetype, logging
 from sphinx.util.docutils import SphinxDirective
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 logger = logging.getLogger(__name__)
 
