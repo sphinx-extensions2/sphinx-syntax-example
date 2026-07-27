@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+### 🐛 Fixes
+
+- The stylesheet no longer relies on load order to win ties against theme
+  rules: the render pane's padding now out-specifies theme `.container`
+  resets (fixing the missing horizontal padding under Furo, which links its
+  `furo-extensions.css` *after* extension stylesheets), and Bootstrap-style
+  `.container` layout is neutralized on the outer frame.
+
 ## v0.1.0 (2026-07-27)
 
 Initial release.

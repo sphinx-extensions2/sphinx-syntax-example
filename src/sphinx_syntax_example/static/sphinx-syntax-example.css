@@ -13,22 +13,26 @@
    CASCADE NOTE — the child-combinator selectors below are DELIBERATE, not
    stylistic; do not "simplify" them to a single class. docutils tags the render
    pane and the outer box with the `container` class, and Sphinx tags the source
-   pane `highlight-<lang>`, so some themes' own rules match our elements and
-   (being more specific than a lone class) would otherwise win. The known
-   offenders, from Furo's bundled `furo-extensions.css` / theme CSS, are:
+   pane `highlight-<lang>`, so themes' own rules match our elements. Where that
+   happens, the rules below beat the theme on SPECIFICITY (qualifying with the
+   docutils-emitted `container` class) and never rely on stylesheet order:
+   load order is theme policy, not ours — Furo, for one, links its
+   `furo-extensions.css` (whose `[role=main] .container`, 0,2,0, zeroes
+   horizontal padding) AFTER extension `html_css_files`, so an
+   equal-specificity "tie" resolves to the theme, not to us.
 
-   - `[role=main] .container` (specificity 0,2,0) zeroes `padding-left/right` —
-     this is what blanks the render pane's horizontal padding.
-     `.syntax-example > .syntax-example-render` (0,2,0) ties it, and Sphinx loads
-     extension `html_css_files` AFTER the theme CSS, so the tie resolves to us.
-   - `div[class*=" highlight-"]` (0,1,1) sets `margin: 1em 0` on the source pane;
-     `.syntax-example > .syntax-example-source` (0,2,0) beats it outright.
-
-   The outer `.syntax-example` (0,1,0) is intentionally left low: it sets no
-   horizontal padding, so a theme zeroing that padding (and setting
-   `max-width: none`) is a harmless no-op on the frame. The rubric is a `<p>`,
-   not a `.container`, so only docutils' `p.rubric` (0,1,1) competes and
-   `.syntax-example > .rubric` (0,2,0) wins. */
+   - render pane: theme `.container` padding resets (Furo) lose to
+     `.syntax-example > .syntax-example-render.container` (0,3,0) at any load
+     order. The unqualified selector is kept alongside for a writer that emits
+     no `container` class — exactly the case where no theme `.container` rule
+     can interfere either.
+   - outer frame: Bootstrap-family themes give `.container` a width cap,
+     auto-centring margins and gutter padding; `.syntax-example.container`
+     (0,2,0) restores the frame's own geometry above their (0,1,0).
+   - source pane: `div[class*=" highlight-"]` (0,1,1) margins lose to
+     `.syntax-example > .syntax-example-source` (0,2,0) outright.
+   - rubric: a `<p>`, not a `.container`, so only docutils' `p.rubric` (0,1,1)
+     competes and `.syntax-example > .rubric` (0,2,0) wins. */
 
 .syntax-example {
     /* Package-owned properties: theme variable first, light default second. */
@@ -40,6 +44,15 @@
     border: 1px solid var(--syntax-example-border);
     border-radius: .3rem;
     overflow: hidden;
+}
+
+.syntax-example.container {
+    /* Undo Bootstrap-style `.container` layout (width cap, auto-centring,
+       gutter padding) that some themes attach to the docutils class. */
+    width: auto;
+    max-width: none;
+    margin: 1rem 0;
+    padding: 0;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -68,7 +81,8 @@
     border-bottom: 1px solid var(--syntax-example-border);
 }
 
-.syntax-example > .syntax-example-render {
+.syntax-example > .syntax-example-render,
+.syntax-example > .syntax-example-render.container {
     padding: .3rem .8rem;
 }
 
