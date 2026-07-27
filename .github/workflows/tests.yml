@@ -7,6 +7,17 @@ on:
       - "v[0-9]+.[0-9]+.[0-9]+*"
   pull_request:
 
+# Cancel superseded runs on the same PR; never cancel main/tag runs
+# (a cancelled in-flight publish would be worse than a queued one).
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+# Least privilege for the default GITHUB_TOKEN; the publish job widens
+# its own scopes (id-token) at job level.
+permissions:
+  contents: read
+
 jobs:
 
   pytest:
