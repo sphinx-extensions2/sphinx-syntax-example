@@ -10,14 +10,14 @@ repos:
   - id: check-yaml
 
 - repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: v0.15.21
+  rev: v0.16.8
   hooks:
   - id: ruff-check
     args: [--fix]
   - id: ruff-format
 
 - repo: https://github.com/pre-commit/mirrors-mypy
-  rev: v2.3.0
+  rev: v2.3.1
   hooks:
   # Type-check against both ends of the supported Sphinx range, so neither
   # a floor-only nor a latest-only signature drift can slip through.
